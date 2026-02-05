@@ -2,30 +2,35 @@ pipeline {
     agent any
 
     stages {
-        stage('Build') {
+
+        stage('Checkout') {
             steps {
-                echo 'Building application'
+                echo 'Checking out source code from Git'
+                checkout scm
             }
         }
 
-        stage('Test') {
+        stage('Compile') {
             steps {
-                echo 'Running tests'
-                // Uncomment next line to simulate failure
-                // error "Test failed"
+                echo 'Compiling Java code'
+                sh 'javac Hello.java'
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                echo 'Archiving build outputs'
+                archiveArtifacts artifacts: '*.class', fingerprint: true
             }
         }
     }
 
     post {
         success {
-            echo 'BUILD SUCCESSFUL ✅'
+            echo 'CI PIPELINE SUCCESSFUL ✅'
         }
         failure {
-            echo 'BUILD FAILED ❌'
-        }
-        always {
-            echo 'Build completed (success or failure)'
+            echo 'CI PIPELINE FAILED ❌'
         }
     }
 }
