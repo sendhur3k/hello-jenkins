@@ -1,1 +1,1 @@
-hello from github repository
+hello jenkins - SCM poll trigger test
