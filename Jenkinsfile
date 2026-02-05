@@ -2,22 +2,30 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                echo 'Source code checked out from Git'
-            }
-        }
-
         stage('Build') {
             steps {
-                echo 'Build stage executed'
+                echo 'Building application'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Test stage executed'
+                echo 'Running tests'
+                // Uncomment next line to simulate failure
+                // error "Test failed"
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'BUILD SUCCESSFUL ✅'
+        }
+        failure {
+            echo 'BUILD FAILED ❌'
+        }
+        always {
+            echo 'Build completed (success or failure)'
         }
     }
 }
