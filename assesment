@@ -124,3 +124,13 @@ FINAL RESULT:
 Jenkins checks out the Maven project from GitHub, builds it using Maven, runs JUnit unit
 tests automatically, and reports build success or failure. 
 This completes a full CI pipeline.
+
+
+
+1. Select maven project
+2. Select Source code management as GIT , paste <<YOUR PATH>>
+3. Change branch as per your repository main/master
+4. In build section, Root POM-> pom.xml and Goals and options-> clean install
+5. In build section , Select advance and select the options as per the screen shot.
+6. In Post steps -> select Run regardless of build result
+7. Select Save and Build
