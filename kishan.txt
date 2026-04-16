@@ -12,6 +12,353 @@ process using Jenkins.
             Show the deployed application in the node port.
 
 c. To print rating of a movie(do this)
+Alright — this is a **full CI/CD pipeline using Jenkins + Docker + Kubernetes**, plus a **simple web app that prints movie ratings**. I’ll walk you through it **step-by-step in the exact order you need for lab/exam**.
+
+---
+
+# ✅ PART C — Movie Rating Web App (DO THIS FIRST)
+
+We’ll create a simple **Node.js web app** that prints movie ratings.
+
+## 📌 1. Create Project in VS Code
+
+Create a folder:
+
+```
+movie-rating-app
+```
+
+### 📄 `app.js`
+
+```javascript
+const express = require('express');
+const app = express();
+
+const movies = [
+    { name: "Inception", rating: 8.8 },
+    { name: "Interstellar", rating: 8.6 },
+    { name: "Avengers: Endgame", rating: 8.4 }
+];
+
+app.get('/', (req, res) => {
+    let result = "<h1>Movie Ratings</h1>";
+    movies.forEach(m => {
+        result += `<p>${m.name} - Rating: ${m.rating}</p>`;
+    });
+    res.send(result);
+});
+
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
+```
+
+---
+
+### 📄 `package.json`
+
+```json
+{
+  "name": "movie-rating-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+```
+
+---
+
+## 📌 2. Install Dependencies
+
+Open terminal:
+
+```bash
+npm install
+```
+
+Run:
+
+```bash
+node app.js
+```
+
+👉 Open browser:
+
+```
+http://localhost:3000
+```
+
+---
+
+# ✅ PART A — Push to GitHub
+
+## 📌 3. Initialize Git
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+```
+
+## 📌 4. Create GitHub Repo
+
+Go to GitHub and create repo.
+
+Then:
+
+```bash
+git remote add origin https://github.com/your-username/movie-rating-app.git
+git push -u origin main
+```
+
+---
+
+## 📌 5. Modify Code (CI trigger)
+
+Example change:
+
+```javascript
+{ name: "The Dark Knight", rating: 9.0 }
+```
+
+Then:
+
+```bash
+git add .
+git commit -m "Updated movie list"
+git push
+```
+
+---
+
+# ✅ PART B — Docker Setup
+
+## 📌 6. Create Dockerfile
+
+### 📄 `Dockerfile`
+
+```dockerfile
+FROM node:18
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "app.js"]
+```
+
+---
+
+## 📌 7. Build Docker Image
+
+```bash
+docker build -t movie-app .
+```
+
+Run:
+
+```bash
+docker run -p 3000:3000 movie-app
+```
+
+---
+
+# ✅ PART C — Push to Docker Hub
+
+Go to Docker
+
+## 📌 8. Login
+
+```bash
+docker login
+```
+
+## 📌 9. Tag & Push
+
+```bash
+docker tag movie-app yourusername/movie-app
+docker push yourusername/movie-app
+```
+
+---
+
+# ✅ PART D — Kubernetes Deployment
+
+Using Kubernetes
+
+---
+
+## 📌 10. Deployment YAML
+
+### 📄 `deployment.yaml`
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: movie-app
+  template:
+    metadata:
+      labels:
+        app: movie-app
+    spec:
+      containers:
+      - name: movie-app
+        image: yourusername/movie-app
+        ports:
+        - containerPort: 3000
+```
+
+---
+
+## 📌 11. Service YAML (NodePort)
+
+### 📄 `service.yaml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie-service
+spec:
+  type: NodePort
+  selector:
+    app: movie-app
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30007
+```
+
+---
+
+## 📌 12. Apply Config
+
+```bash
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+```
+
+---
+
+## 📌 13. Access App
+
+```bash
+kubectl get nodes -o wide
+```
+
+Open:
+
+```
+http://<NODE-IP>:30007
+```
+
+---
+
+# ✅ PART E — Jenkins Pipeline
+
+Using Jenkins
+
+---
+
+## 📌 14. Install Plugins
+
+* Git
+* Docker Pipeline
+* Kubernetes CLI
+
+---
+
+## 📌 15. Create Pipeline Job
+
+* New Item → Pipeline
+
+---
+
+## 📌 16. Add Jenkinsfile in GitHub
+
+### 📄 `Jenkinsfile`
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Checkout GitHub') {
+            steps {
+                git 'https://github.com/your-username/movie-rating-app.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t yourusername/movie-app .'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh 'docker push yourusername/movie-app'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f deployment.yaml'
+                sh 'kubectl apply -f service.yaml'
+            }
+        }
+    }
+}
+```
+
+---
+
+## 📌 17. Run Pipeline
+
+* Click **Build Now**
+* Jenkins will:
+  ✔ Pull code
+  ✔ Build image
+  ✔ Push to Docker Hub
+  ✔ Deploy to Kubernetes
+
+---
+
+# ✅ FINAL OUTPUT
+
+👉 Open in browser:
+
+```
+http://<NODE-IP>:30007
+```
+
+You’ll see:
+
+```
+Movie Ratings
+Inception - 8.8
+Interstellar - 8.6
+Avengers - 8.4
+```
+
+---
+
+
+
 
 
 
